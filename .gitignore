@@ -1,1 +1,24 @@
 venv
+db.*
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- SQLite local ---
+db.sqlite3
+
+# --- Ambientes virtuais ---
+venv/
+.env/
+*.env
+
+# --- VSCode / IDE ---
+.vscode/
+.idea/
+
+# --- Arquivos de build temporários ---
+*.log
+*.bak

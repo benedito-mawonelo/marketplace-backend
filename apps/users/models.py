@@ -19,6 +19,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, telefone, nome, password):
         user = self.create_user(email, telefone, nome, password, role="ADMIN")
         user.is_admin = True
+        user.is_superuser = True
         user.save(using=self._db)
         return user
 
@@ -59,6 +60,9 @@ class ClienteEmpresa(models.Model):
 class Socio(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     endereco = models.TextField()
-    foto_perfil = models.URLField(blank=True, null=True)
-    codigo_socio = models.CharField(max_length=50, unique=True)
+    foto_perfil = models.TextField(blank=True, null=True)
+    bi_frente = models.TextField(blank=True, null=True)
+    bi_verso = models.TextField(blank=True, null=True)
     dados_pagamento = models.TextField()
+    status = models.CharField(max_length=10, choices=[('PENDING','PENDING'),('APPROVED','APPROVED'),('REJECTED','REJECTED')], default='PENDING')
+    codigo_socio = models.CharField(max_length=50, unique=True, blank=True, null=True)

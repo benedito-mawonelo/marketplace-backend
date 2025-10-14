@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from .models import Carrinho, CarrinhoItem, Pedido, PedidoItem, Entrega
 from apps.comissoes.models import Comissao
 from .serializers import CarrinhoSerializer, PedidoSerializer, EntregaSerializer
+from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404
 from apps.users.models import Socio
 from decimal import Decimal
@@ -48,14 +49,14 @@ class CarrinhoViewSet(viewsets.ViewSet):
         if not created:
             item.quantidade += quantidade
             item.save()
-        return Response({"message": "Produto adicionado ao carrinho."})
+        return Response({"message": _("Produto adicionado ao carrinho.")})
 
     @action(detail=False, methods=['post'])
     def remover_item(self, request):
         carrinho = get_object_or_404(Carrinho, user=request.user)
         produto_id = request.data.get("produto_id")
         CarrinhoItem.objects.filter(carrinho=carrinho, produto_id=produto_id).delete()
-        return Response({"message": "Produto removido."})
+        return Response({"message": _("Produto removido.")})
 
     @action(detail=False, methods=['post'])
     def checkout(self, request):
@@ -68,7 +69,7 @@ class CarrinhoViewSet(viewsets.ViewSet):
             try: 
                 Socio.objects.get(codigo_socio=socio_codigo)
             except Socio.DoesNotExist:
-                return Response({"error": "Código de sócio inválido"}, status=400)
+                return Response({"error": _("Código de sócio inválido")}, status=400)
 
 
         pedido = Pedido.objects.create(
@@ -130,7 +131,7 @@ class PedidoViewSet(viewsets.ModelViewSet):
             estado="PREPARACAO"
         )
 
-        return Response({"message": "Pagamento confirmado e entrega criada."})
+        return Response({"message": _("Pagamento confirmado e entrega criada.")})
 
 
 class EntregaViewSet(viewsets.ModelViewSet):
@@ -143,4 +144,4 @@ class EntregaViewSet(viewsets.ModelViewSet):
         novo_estado = request.data.get("estado")
         entrega.estado = novo_estado
         entrega.save()
-        return Response({"message": f"Entrega atualizada para {novo_estado}"})
+        return Response({"message": _("Entrega atualizada para {}").format(novo_estado)})

@@ -1,5 +1,6 @@
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
+from django.utils.translation import gettext_lazy as _
 from .models import User
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -17,15 +18,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             try:
                 user = User.objects.get(telefone=email_or_phone)
             except User.DoesNotExist:
-                raise serializers.ValidationError("Usuário não encontrado")
+                raise serializers.ValidationError(_("Usuário não encontrado"))
 
         # Verificar senha
         if not user.check_password(password):
-            raise serializers.ValidationError("Credenciais inválidas")
+            raise serializers.ValidationError(_("Credenciais inválidas"))
 
         # **Proteção: verificar se a conta está ativa**
         if not user.is_active:
-            raise serializers.ValidationError("Conta desativada. Entre em contato para reativar.")
+            raise serializers.ValidationError(_("Conta desativada. Entre em contato para reativar."))
         
         #TODO: Escrever logica para reactivar a conta por email enviando um link.
 

@@ -61,6 +61,22 @@ class SocioViewSet(viewsets.ModelViewSet):
     queryset = Socio.objects.all()
     serializer_class = SocioSerializer
 
+    @action(detail=False, methods=['get', 'post'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        if request.method == 'GET':
+            socio, created = Socio.objects.get_or_create(user=request.user, defaults={
+                'endereco': '',
+                'dados_pagamento': ''
+            })
+            serializer = SocioSerializer(socio)
+            return Response(serializer.data)
+        if request.method == 'POST':
+            socio, _ = Socio.objects.get_or_create(user=request.user)
+            serializer = SocioSerializer(socio, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+
 
 class CustomLoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer

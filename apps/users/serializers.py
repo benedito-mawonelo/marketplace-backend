@@ -30,6 +30,13 @@ class ClienteEmpresaSerializer(serializers.ModelSerializer):
         model = ClienteEmpresa
         fields = '__all__'
 
+
+class SocioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Socio
+        fields = ['id','user','endereco','foto_perfil','bi_frente','bi_verso','dados_pagamento','status','codigo_socio']
+        read_only_fields = ['status','codigo_socio','user']
+
 class SocioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Socio

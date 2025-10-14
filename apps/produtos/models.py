@@ -37,3 +37,4 @@ class ProdutoImagem(models.Model):
 class ProdutoVideo(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="videos")
     url_video = models.URLField()
+    ordem = models.IntegerField(default=0)

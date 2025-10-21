@@ -1,9 +1,12 @@
+import os
 from django.db import models
 from storages.backends.s3boto3 import S3Boto3Storage
+from django.utils.text import slugify
 
 class MediaStorage(S3Boto3Storage):
-    location = 'media'
+    location = 'media/'  # importante o /
     file_overwrite = False
+
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=255)
@@ -25,7 +28,7 @@ class Produto(models.Model):
     def __str__(self):
         return self.nome
 
-# Ex: nome: Memória RAM	valor: 4 GB, referentes a um dispositivo
+
 class ProdutoAtributo(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="atributos")
     nome_atributo = models.CharField(max_length=255)
@@ -35,20 +38,23 @@ class ProdutoAtributo(models.Model):
 class ProdutoImagem(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="imagens")
     imagem = models.ImageField(upload_to='produtos/images', storage=MediaStorage())
-    ordem = models.IntegerField(default=0) # Ordem de exibiçao do produto
+    ordem = models.IntegerField(default=0)
+
+
+def video_upload_path(instance, filename):
+    base, ext = os.path.splitext(filename)
+    safe_name = slugify(base)
+    return f'produtos/videos/{safe_name}{ext}'
 
 
 class ProdutoVideo(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="videos")
-    video = models.FileField(upload_to='produtos/videos/', storage=MediaStorage())
-    url_video = models.URLField()
+    video = models.FileField(upload_to=video_upload_path, storage=MediaStorage())
     ordem = models.IntegerField(default=0)
 
-    def save(self, *args, **kwargs):
-            # Actualiza a URL automaticamente quando um vídeo é carregado
-            if self.video:
-                self.url_video = self.video.url
-            super().save(*args, **kwargs)
-    
+    @property
+    def url_video(self):
+        return self.video.url if self.video else None
+
     def __str__(self):
         return f"Vídeo {self.ordem} - {self.produto.nome}"

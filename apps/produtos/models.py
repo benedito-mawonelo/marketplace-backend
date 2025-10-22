@@ -1,11 +1,15 @@
 import os
+import os
 from django.db import models
 from storages.backends.s3boto3 import S3Boto3Storage
+from django.utils.text import slugify
 from django.utils.text import slugify
 
 class MediaStorage(S3Boto3Storage):
     location = 'media/'
+    location = 'media/'  # importante o /
     file_overwrite = False
+
 
 class Categoria(models.Model):
     nome = models.CharField(max_length=255)
@@ -27,7 +31,7 @@ class Produto(models.Model):
     def __str__(self):
         return self.nome
 
-# Ex: nome: Memória RAM	valor: 4 GB, referentes a um dispositivo
+
 class ProdutoAtributo(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="atributos")
     nome_atributo = models.CharField(max_length=255)
@@ -44,12 +48,24 @@ def video_upload_path(instance, filename):
     base, ext = os.path.splitext(filename)
     safe_name = slugify(base)
     return f'produtos/videos/{safe_name}{ext}'
+    ordem = models.IntegerField(default=0)
+
+
+def video_upload_path(instance, filename):
+    base, ext = os.path.splitext(filename)
+    safe_name = slugify(base)
+    return f'produtos/videos/{safe_name}{ext}'
 
 class ProdutoVideo(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="videos")
     video = models.FileField(upload_to=video_upload_path, storage=MediaStorage())
+    video = models.FileField(upload_to=video_upload_path, storage=MediaStorage())
     url_video = models.URLField()
     ordem = models.IntegerField(default=0)
+
+    @property
+    def url_video(self):
+        return self.video.url if self.video else None
 
     @property
     def url_video(self):

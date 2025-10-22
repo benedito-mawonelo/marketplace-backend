@@ -60,6 +60,9 @@ class ClienteEmpresa(models.Model):
 class Socio(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     endereco = models.TextField()
-    foto_perfil = models.URLField(blank=True, null=True)
+    # Use TextField to allow storing base64 captured images if needed
+    foto_perfil = models.TextField(blank=True, null=True)
+    bi_frente = models.TextField(blank=True, null=True)
+    bi_verso = models.TextField(blank=True, null=True)
     codigo_socio = models.CharField(max_length=50, unique=True)
     dados_pagamento = models.TextField()

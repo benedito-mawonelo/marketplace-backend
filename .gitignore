@@ -1,4 +1,4 @@
-venv
+.venv
 db.*
 
 # --- Python ---
@@ -11,7 +11,7 @@ __pycache__/
 db.sqlite3
 
 # --- Ambientes virtuais ---
-venv/
+.venv/
 .env/
 *.env
 .env

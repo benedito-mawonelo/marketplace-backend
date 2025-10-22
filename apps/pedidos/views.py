@@ -49,6 +49,25 @@ class CarrinhoViewSet(viewsets.ViewSet):
             item.quantidade += quantidade
             item.save()
         return Response({"message": "Produto adicionado ao carrinho."})
+    
+    # Metodo para validar o codigo do sócio
+    @action(detail=False, methods=['post'])
+    def validar_promocao(self, request):
+        codigo = request.data.get('codigo')
+        try:
+            socio = Socio.objects.get(codigo_socio=codigo)
+        except Socio.DoesNotExist:
+            return Response({"valido": False, "mensagem": "Código inválido"}, status=400)
+        
+        desconto_percentual = 5  # por exemplo, 5%
+        comissao_percentual = 2  # por exemplo, 2%
+
+        return Response({
+            "valido": True,
+            "desconto_percentual": desconto_percentual,
+            "comissao_percentual": comissao_percentual,
+            "socio": socio.id
+        })
 
     @action(detail=False, methods=['post'])
     def remover_item(self, request):
@@ -56,31 +75,22 @@ class CarrinhoViewSet(viewsets.ViewSet):
         produto_id = request.data.get("produto_id")
         CarrinhoItem.objects.filter(carrinho=carrinho, produto_id=produto_id).delete()
         return Response({"message": "Produto removido."})
-
+    
     @action(detail=False, methods=['post'])
     def checkout(self, request):
-        """
-        Converte o carrinho em Pedido
-        """
         carrinho = get_object_or_404(Carrinho, user=request.user)
         socio_codigo = request.data.get("codigo_socio")
-        if socio_codigo:
-            try: 
-                Socio.objects.get(codigo_socio=socio_codigo)
-            except Socio.DoesNotExist:
-                return Response({"error": "Código de sócio inválido"}, status=400)
-
 
         pedido = Pedido.objects.create(
             cliente=request.user,
-            total=0,  # calcularemos abaixo
+            total=0,
             status="PENDENTE"
         )
 
-        total = 0
+        total = Decimal(0)
         for item in carrinho.itens.all():
             preco_unitario = item.produto.preco
-            quantidade = Decimal(item.quantidade)  # <- converte para Decimal
+            quantidade = Decimal(item.quantidade)
             PedidoItem.objects.create(
                 pedido=pedido,
                 produto=item.produto,
@@ -89,25 +99,26 @@ class CarrinhoViewSet(viewsets.ViewSet):
             )
             total += preco_unitario * quantidade
 
-
-        desconto = 0
+        desconto = Decimal(0)
         if socio_codigo:
             try:
                 socio = Socio.objects.get(codigo_socio=socio_codigo)
-                desconto = total * Decimal(0.05)  # 5% desconto, exemplo
+                desconto_percentual = Decimal(5)  # poderia vir de base de dados
+                comissao_percentual = Decimal(2)
+                desconto = total * (desconto_percentual / 100)
+                comissao_valor = total * (comissao_percentual / 100)
+
                 Comissao.objects.create(
                     socio=socio,
                     pedido=pedido,
-                    valor=total * Decimal(0.02),  # comissão 2%, exemplo
+                    valor=comissao_valor,
                     status="PENDENTE"
                 )
             except Socio.DoesNotExist:
-                pass
+                return Response({"error": "Código de sócio inválido"}, status=400)
 
         pedido.total = total - desconto
         pedido.save()
-
-        # limpar carrinho
         carrinho.itens.all().delete()
 
         return Response(PedidoSerializer(pedido).data, status=status.HTTP_201_CREATED)

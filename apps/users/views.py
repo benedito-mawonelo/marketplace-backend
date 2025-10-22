@@ -85,5 +85,30 @@ class SocioViewSet(viewsets.ModelViewSet):
     serializer_class = SocioSerializer
 
 
+class SocioMeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            socio = Socio.objects.get(user=request.user)
+        except Socio.DoesNotExist:
+            return Response({'detail': 'Socio não encontrado'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = SocioSerializer(socio)
+        return Response(serializer.data)
+
+    def post(self, request):
+        # Create or update own Socio profile
+        socio, _ = Socio.objects.get_or_create(user=request.user, defaults={
+            'endereco': request.data.get('endereco', ''),
+            'dados_pagamento': request.data.get('dados_pagamento', ''),
+            'codigo_socio': request.data.get('codigo_socio', f"SOC-{request.user.id}"),
+        })
+        serializer = SocioSerializer(socio, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class CustomLoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer

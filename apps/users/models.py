@@ -57,6 +57,28 @@ class ClienteEmpresa(models.Model):
     endereco = models.TextField()
 
 
+def gerar_novo_codigo_socio():
+    """
+    Gera um novo código de sócio no formato 'M' + 4 dígitos (ex: M0001).
+    """
+    ultimo_socio = Socio.objects.all().order_by('id').last()
+    
+    if not ultimo_socio or not ultimo_socio.codigo_socio or not ultimo_socio.codigo_socio.startswith('M'):
+        # Se não houver sócios ou o último código não estiver no formato esperado, começa do 1.
+        novo_numero = 1
+    else:
+        try:
+            # Extrai a parte numérica do código do último sócio e incrementa.
+            ultimo_numero = int(ultimo_socio.codigo_socio[1:])
+            novo_numero = ultimo_numero + 1
+        except (ValueError, IndexError):
+            # Fallback caso o código existente seja inválido.
+            novo_numero = Socio.objects.count() + 1
+
+    # Formata o novo código com 4 dígitos, preenchendo com zeros à esquerda.
+    return f"M{novo_numero:04d}"
+
+
 class Socio(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     endereco = models.TextField()
@@ -64,5 +86,10 @@ class Socio(models.Model):
     foto_perfil = models.TextField(blank=True, null=True)
     bi_frente = models.TextField(blank=True, null=True)
     bi_verso = models.TextField(blank=True, null=True)
-    codigo_socio = models.CharField(max_length=50, unique=True)
+    codigo_socio = models.CharField(max_length=5, unique=True, blank=True)
     dados_pagamento = models.TextField()
+
+    def save(self, *args, **kwargs):
+        if not self.codigo_socio:
+            self.codigo_socio = gerar_novo_codigo_socio()
+        super().save(*args, **kwargs)

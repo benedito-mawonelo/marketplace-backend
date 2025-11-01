@@ -98,10 +98,10 @@ class SocioMeView(APIView):
 
     def post(self, request):
         # Create or update own Socio profile
-        socio, _ = Socio.objects.get_or_create(user=request.user, defaults={
+        # O codigo_socio agora é gerado automaticamente no model.
+        socio, created = Socio.objects.get_or_create(user=request.user, defaults={
             'endereco': request.data.get('endereco', ''),
             'dados_pagamento': request.data.get('dados_pagamento', ''),
-            'codigo_socio': request.data.get('codigo_socio', f"SOC-{request.user.id}"),
         })
         serializer = SocioSerializer(socio, data=request.data, partial=True)
         if serializer.is_valid():

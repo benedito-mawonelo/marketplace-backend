@@ -7,10 +7,14 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'nome', 'email', 'telefone', 'role', 'password']
+        # Do not allow client to choose role during registration; server enforces default CLIENTE
+        fields = ['id', 'nome', 'email', 'telefone', 'password', 'role']
+        read_only_fields = ['role']
 
     def create(self, validated_data):
         password = validated_data.pop("password")
+        # Force default role CLIENTE regardless of input
+        validated_data['role'] = 'CLIENTE'
         user = User(**validated_data)
         user.set_password(password)
         user.save()

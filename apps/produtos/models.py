@@ -74,3 +74,4 @@ class ProdutoVideo(models.Model):
     
     def __str__(self):
         return f"Vídeo {self.ordem} - {self.produto.nome}"
+    
